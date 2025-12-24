@@ -3,36 +3,177 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login • Gestão de Ativos PM</title>
-  <link rel="stylesheet" href="./assets/style.css" />
+  <title>Gestão de Ativos PM</title>
+
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f5f6f7;margin:0;padding:24px;}
+    .card{max-width:920px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;}
+    h1{margin:0 0 12px 0;font-size:18px}
+    .muted{color:#6b7280;font-size:12px;margin-top:-6px;margin-bottom:10px}
+    label{font-size:12px;color:#374151;display:block;margin:10px 0 6px}
+    input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;background:#fff}
+    .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    button{padding:10px 14px;border:0;border-radius:8px;background:#111827;color:#fff;cursor:pointer}
+    button.secondary{background:#374151}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .msg{margin-top:10px;font-size:13px}
+    .ok{color:#065f46}
+    .err{color:#991b1b}
+    .hidden{display:none !important;}
+
+    .headerConstruindo{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+    }
+    .headerConstruindo h1{margin:0;font-size:18px;line-height:1.2;}
+    .construindoBox{
+      margin-top:14px; padding:18px; border:1px dashed #d1d5db; border-radius:10px;
+      background:#fafafa; text-align:center;
+    }
+    .construindoBox .titulo{font-size:22px;font-weight:700;margin:0 0 6px 0;}
+    .construindoBox .sub{margin:0;color:#6b7280;font-size:13px;}
+  </style>
 </head>
+
 <body>
   <div class="card">
-    <div class="header">
-      <h1>Gestão de Ativos PM</h1>
-      <img src="./assets/logo.png" alt="Gestão de Ativos PM">
-    </div>
 
-    <div class="box">
-      <h2>Login</h2>
-      <p>Entre com e-mail e senha.</p>
+    <!-- VIEW LOGIN -->
+    <section id="viewLogin">
+      <h1>Login</h1>
+      <div class="muted">Acesso com e-mail e senha (Firebase Auth).</div>
 
-      <form id="frmLogin" class="form">
+      <form id="frmLogin" autocomplete="on">
         <label>E-mail</label>
-        <input id="email" type="email" autocomplete="username" required />
+        <input id="loginEmail" type="email" autocomplete="username" placeholder="seuemail@..." />
 
         <label>Senha</label>
-        <input id="senha" type="password" autocomplete="current-password" required />
+        <input id="loginPass" type="password" autocomplete="current-password" />
 
         <div class="actions">
           <button id="btnEntrar" type="submit">Entrar</button>
         </div>
 
-        <div id="msg" class="msg"></div>
+        <div id="msgLogin" class="msg"></div>
       </form>
-    </div>
+    </section>
+
+    <!-- VIEW EM CONSTRUÇÃO -->
+    <section id="viewConstruindo" class="hidden">
+      <div class="headerConstruindo">
+        <h1>Gestão de Ativos PM</h1>
+      </div>
+
+      <div class="construindoBox">
+        <p class="titulo">EM CONSTRUÇÃO</p>
+        <p class="sub">Você está autenticado.</p>
+      </div>
+
+      <div class="actions">
+        <button id="btnConstruindoSair" type="button" class="secondary">Sair</button>
+      </div>
+    </section>
+
   </div>
 
-  <script type="module" src="./assets/app.js"></script>
+  <!-- Firebase v9 (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // ✅ SEU firebaseConfig (sistemaescala-d8c25) — coloque o seu AQUI
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-t7NgJWtbkhhh9Lsez9L4y_XWdqxqxpk",
+      authDomain: "sistemaescala-d8c25.firebaseapp.com",
+      projectId: "sistemaescala-d8c25",
+      storageBucket: "sistemaescala-d8c25.firebasestorage.app",
+      messagingSenderId: "1067432155042",
+      appId: "1:1067432155042:web:9ae9d4047180c3197684fb",
+      measurementId: "G-0T2B7ZMMM9"
+    };
+
+    // ===== util =====
+    function setMsg(el, text, ok){
+      el.textContent = text || "";
+      el.className = "msg " + (ok ? "ok" : "err");
+    }
+    function show(viewId){
+      document.getElementById("viewLogin").classList.add("hidden");
+      document.getElementById("viewConstruindo").classList.add("hidden");
+      document.getElementById(viewId).classList.remove("hidden");
+    }
+    function friendlyAuthMessage(err){
+      const code = (err && err.code) ? String(err.code) : "";
+      const msg  = (err && err.message) ? String(err.message) : "";
+
+      // Firebase v9 codes comuns
+      if (code === "auth/invalid-login-credentials") return "Login ou senha erradas.";
+      if (code === "auth/wrong-password") return "Login ou senha erradas.";
+      if (code === "auth/user-not-found") return "Login ou senha erradas.";
+      if (code === "auth/invalid-email") return "E-mail inválido.";
+      if (code === "auth/too-many-requests") return "Muitas tentativas. Aguarde e tente novamente.";
+      if (code === "auth/network-request-failed") return "Falha de rede. Verifique sua conexão.";
+
+      // fallback
+      if (msg.toUpperCase().includes("INVALID_LOGIN_CREDENTIALS")) return "Login ou senha erradas.";
+      return "Falha ao autenticar.";
+    }
+
+    // ===== init firebase =====
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // ===== refs =====
+    const frmLogin = document.getElementById("frmLogin");
+    const btnEntrar = document.getElementById("btnEntrar");
+    const msgLogin = document.getElementById("msgLogin");
+    const btnConstruindoSair = document.getElementById("btnConstruindoSair");
+
+    // ===== login submit =====
+    frmLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg(msgLogin, "", true);
+
+      const email = (document.getElementById("loginEmail").value || "").trim();
+      const senha = (document.getElementById("loginPass").value || "");
+
+      if (!email || !senha){
+        setMsg(msgLogin, "Informe e-mail e senha.", false);
+        return;
+      }
+
+      btnEntrar.disabled = true;
+      try{
+        await signInWithEmailAndPassword(auth, email, senha);
+        // onAuthStateChanged vai trocar a tela
+      }catch(err){
+        setMsg(msgLogin, friendlyAuthMessage(err), false);
+      }finally{
+        btnEntrar.disabled = false;
+      }
+    });
+
+    // ===== logout =====
+    btnConstruindoSair.addEventListener("click", async () => {
+      try { await signOut(auth); } catch(e) {}
+      setMsg(msgLogin, "", true);
+      show("viewLogin");
+      document.getElementById("loginEmail").focus();
+    });
+
+    // ===== sessão =====
+    onAuthStateChanged(auth, (user) => {
+      if (user){
+        show("viewConstruindo");
+      }else{
+        show("viewLogin");
+      }
+    });
+  </script>
 </body>
 </html>
