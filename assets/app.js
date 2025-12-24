@@ -6,20 +6,19 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
-// ✅ Cole aqui seu firebaseConfig (do projeto certo)
 const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+  apiKey: "AIzaSyB-t7NgJWtbkhhh9Lsez9L4y_XWdqxqxpk",
+  authDomain: "sistemaescala-d8c25.firebaseapp.com",
+  projectId: "sistemaescala-d8c25",
+  storageBucket: "sistemaescala-d8c25.firebasestorage.app",
+  messagingSenderId: "1067432155042",
+  appId: "1:1067432155042:web:9ae9d4047180c3197684fb",
+  measurementId: "G-0T2B7ZMMM9"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Helpers
 function setMsg(el, text, ok){
   if (!el) return;
   el.textContent = text || "";
@@ -28,23 +27,23 @@ function setMsg(el, text, ok){
 
 function friendlyAuthMessage(err){
   const code = (err && err.code) ? String(err.code) : "";
-  const msg = (err && err.message) ? String(err.message) : "";
+  const msg  = (err && err.message) ? String(err.message) : "";
 
-  if (code === "auth/invalid-credential" ||
-      code === "auth/invalid-login-credentials" ||
-      code === "auth/wrong-password" ||
-      code === "auth/user-not-found") {
-    return "Login ou senha erradas.";
-  }
+  if (
+    code === "auth/invalid-credential" ||
+    code === "auth/invalid-login-credentials" ||
+    code === "auth/wrong-password" ||
+    code === "auth/user-not-found"
+  ) return "Login ou senha erradas.";
+
   if (code === "auth/too-many-requests") return "Muitas tentativas. Aguarde e tente novamente.";
   if (code === "auth/network-request-failed") return "Falha de rede. Verifique sua conexão.";
   if (code === "auth/invalid-email") return "E-mail inválido.";
 
-  // fallback
   return msg || "Falha ao autenticar.";
 }
 
-// ====== LOGIN (index.html) ======
+// LOGIN (index.html)
 const frmLogin = document.getElementById("frmLogin");
 const msg = document.getElementById("msg");
 const btnEntrar = document.getElementById("btnEntrar");
@@ -60,7 +59,6 @@ if (frmLogin) {
 
     try {
       await signInWithEmailAndPassword(auth, email, senha);
-      // redireciona para área restrita
       window.location.href = "./app.html";
     } catch (err) {
       setMsg(msg, friendlyAuthMessage(err), false);
@@ -70,7 +68,7 @@ if (frmLogin) {
   });
 }
 
-// ====== APP (app.html) ======
+// APP (app.html)
 const btnSair = document.getElementById("btnSair");
 if (btnSair) {
   btnSair.addEventListener("click", async () => {
@@ -79,21 +77,12 @@ if (btnSair) {
   });
 }
 
-// ====== PROTEÇÃO DE ROTAS ======
+// PROTEÇÃO (não deixa entrar no app.html sem login)
 onAuthStateChanged(auth, (user) => {
   const path = (window.location.pathname || "").toLowerCase();
-
-  const isIndex = path.endsWith("/") || path.endsWith("/index.html");
   const isApp = path.endsWith("/app.html");
 
   if (isApp && !user) {
-    // tentando abrir área restrita sem login
     window.location.replace("./index.html");
-  }
-
-  if (isIndex && user) {
-    // já está logado, vai direto pro app
-    // (opcional, mas fica bem)
-    // window.location.replace("./app.html");
   }
 });
